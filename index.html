@@ -11,8 +11,8 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
 header{padding:14px 16px 0;position:sticky;top:0;background:var(--bg);z-index:5}
 h1{margin:0 0 10px;font-size:20px}
-nav{display:flex;gap:6px}
-nav button{flex:1;padding:10px 2px;border:0;border-bottom:3px solid transparent;background:none;color:var(--mute);font:600 14px inherit;cursor:pointer}
+nav{display:flex;gap:2px;overflow-x:auto}
+nav button{flex:1 0 auto;padding:10px 12px;border:0;border-bottom:3px solid transparent;background:none;color:var(--mute);font:600 14px inherit;cursor:pointer}
 select{font:14px inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px}
 .out{white-space:pre-wrap;word-wrap:break-word;margin-top:12px}
 .warn{border-left:4px solid var(--yel);padding:6px 10px;margin:6px 0;background:var(--card);border-radius:0 8px 8px 0}
@@ -39,6 +39,9 @@ textarea.c{font-family:ui-monospace,Menlo,monospace;font-size:14px;min-height:11
 .cmd small{color:var(--mute);display:block}
 .cmd pre{margin:0 0 4px;padding:6px 10px;cursor:pointer}
 .hide{display:none}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--yel)}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:15px inherit;cursor:pointer}
+.opt.ok{background:#d5f5dd;border-color:#2e9e52;color:#0f3d1e}.opt.ko{background:#fddcdc;border-color:#d13b3b;color:#5a1010}
 .mute{color:var(--mute);font-size:14px}
 h2{font-size:18px;margin:4px 0 8px}
 h3{font-size:16px;margin:14px 0 4px}
@@ -47,7 +50,7 @@ h3{font-size:16px;margin:14px 0 4px}
 <body>
 <header>
 <h1>Python, pas à pas</h1>
-<nav><button id="t-cours" class="on">Cours</button><button id="t-cmd">Commandes</button><button id="t-dbg">Debug</button><button id="t-syn">Syntaxe</button></nav>
+<nav><button id="t-cours" class="on">Cours</button><button id="t-cmd">Commandes</button><button id="t-dbg">Debug</button><button id="t-syn">Syntaxe</button><button id="t-quiz">Quiz</button></nav>
 </header>
 <main>
 
@@ -71,6 +74,8 @@ h3{font-size:16px;margin:14px 0 4px}
 <input id="search" placeholder="Chercher une commande (ex : boucle, liste, len)">
 <div id="cmds" style="margin-top:12px"></div>
 </section>
+
+<section id="quiz" class="hide"><div id="qBox"></div></section>
 
 <section id="dbg" class="hide">
 <div class="card">
@@ -126,14 +131,14 @@ const store={g:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s:(
 let cur=+(store.g("lesson")||0),hist=[];
 
 // Onglets
-const TABS={cours:"t-cours",cmd:"t-cmd",dbg:"t-dbg",syn:"t-syn"};
+const TABS={cours:"t-cours",cmd:"t-cmd",dbg:"t-dbg",syn:"t-syn",quiz:"t-quiz"};
 function tab(n){for(const k in TABS){$(k).classList.toggle("hide",k!==n);$(TABS[k]).classList.toggle("on",k===n)}}
 for(const k in TABS)$(TABS[k]).onclick=()=>tab(k);
 $("model").value=store.g("model")||"gemini-3.5-flash-lite";
 $("model").onchange=()=>store.s("model",$("model").value);
-async function gem(sys,contents){
+async function gem(sys,contents,json){
  const key=store.g("gkey");if(!key)throw new Error("Ajoute d'abord ta clé Gemini (onglet Cours)");
- const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+$("model").value+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents})});
+ const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+$("model").value+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents,generationConfig:json?{responseMimeType:"application/json"}:undefined})});
  const j=await r.json();
  if(!r.ok)throw new Error(j.error&&j.error.message||r.status);
  return j.candidates[0].content.parts.map(p=>p.text||"").join("");
@@ -212,6 +217,67 @@ $("sGo").onclick=async()=>{
  catch(x){$("sOut").textContent="Analyse IA impossible : "+x.message}
  $("sGo").disabled=false;
 };
+
+// Quiz
+const SYS_Q="Tu crées des QCM Python pour un élève francophone débutant. Réponds UNIQUEMENT avec un tableau JSON, sans texte autour : [{\"sujet\":\"nom exact du thème\",\"q\":\"question\",\"code\":\"extrait de code ou chaîne vide\",\"choix\":[\"A\",\"B\",\"C\",\"D\"],\"bonne\":0,\"expl\":\"explication en 1 ou 2 phrases\"}]. 4 choix, une seule bonne réponse (\"bonne\" = son indice de 0 à 3), mauvaises réponses plausibles (erreurs classiques de débutant). Varie les types : prédire la sortie d'un code, trouver l'erreur, compléter, vocabulaire. Français simple.";
+let S=Object.assign({xp:0,streak:0,last:"",level:"",weak:[]},(()=>{try{return JSON.parse(store.g("qs"))||{}}catch(e){return{}}})());
+let Q=[],qi=0,score=0,wrong=[],mode="",curTopic="";
+const saveS=()=>store.s("qs",JSON.stringify(S));
+const day=t=>new Date(t).toISOString().slice(0,10);
+function qHome(){
+ const b=$("qBox");
+ b.innerHTML=`<div class="card"><h2>Ta progression</h2><p>⭐ ${S.xp} XP · 🔥 série : ${S.streak} jour(s)</p><p>Niveau : <b>${S.level||"pas encore évalué"}</b></p>${S.weak.length?`<p class="mute">À revoir : ${S.weak.join(", ")}</p>`:""}</div>
+ <div class="card"><h2>Test de niveau</h2><p class="mute">10 questions, de plus en plus dures, pour savoir où tu en es.</p><div class="row"><button class="btn" id="qPlace">${S.level?"Refaire le test":"Commencer"}</button></div></div>
+ <div class="card"><h2>Mini-tests</h2><p class="mute">5 questions sur un chapitre.</p><div id="qTop"></div></div>`;
+ $("qPlace").onclick=()=>startQuiz("place");
+ const names=S.weak.concat(LESSONS.map(l=>l.t).filter(t=>!S.weak.includes(t)));
+ names.forEach(t=>{const c=document.createElement("button");c.className="opt";c.textContent=(S.weak.includes(t)?"⚠️ ":"")+t;c.onclick=()=>startQuiz("mini",t);$("qTop").appendChild(c)});
+}
+async function startQuiz(m,topic){
+ mode=m;curTopic=topic||"";$("qBox").innerHTML='<div class="card">Je prépare tes questions…</div>';
+ const n=m==="place"?10:5,th=LESSONS.map(l=>l.t).join(", ");
+ const p=m==="place"?`Test de niveau de ${n} questions couvrant ces thèmes (champ sujet = un de ces noms exacts) : ${th}. Difficulté croissante : les 3 premières très faciles, les 3 dernières difficiles.`:`Mini-test de ${n} questions sur le thème « ${topic} » (champ sujet = « ${topic} »). Niveau de l'élève : ${S.level||"débutant"}.`;
+ try{
+  const t=await gem(SYS_Q,[{role:"user",parts:[{text:p}]}],true);
+  Q=JSON.parse(t.replace(/```json|```/g,"").trim()).filter(q=>q&&q.q&&Array.isArray(q.choix)&&q.choix.length>1&&Number.isInteger(q.bonne)&&q.bonne<q.choix.length).slice(0,n);
+  if(!Q.length)throw new Error("aucune question valide, réessaie");
+  Q.forEach(q=>{const c=q.choix.map((x,i)=>[x,i===q.bonne]).sort(()=>Math.random()-.5);q.choix=c.map(x=>x[0]);q.bonne=c.findIndex(x=>x[1])});
+  qi=0;score=0;wrong=[];showQ();
+ }catch(e){$("qBox").innerHTML='<div class="card"><p id="qErr"></p><div class="row"><button class="btn" id="qBack">Retour</button></div></div>';$("qErr").textContent="Impossible de créer le test : "+e.message;$("qBack").onclick=qHome}
+}
+function showQ(){
+ const q=Q[qi];
+ $("qBox").innerHTML=`<div class="card"><div class="bar"><i style="width:${qi/Q.length*100}%"></i></div><p class="mute">Question ${qi+1}/${Q.length}</p><p id="qq"></p><pre id="qc" class="hide"></pre><div id="qch"></div><div id="qx"></div></div>`;
+ $("qq").textContent=q.q;
+ if(q.code){$("qc").textContent=q.code;$("qc").classList.remove("hide")}
+ q.choix.forEach((c,i)=>{const bt=document.createElement("button");bt.className="opt";bt.textContent=c;bt.onclick=()=>answer(i);$("qch").appendChild(bt)});
+}
+function answer(i){
+ const q=Q[qi],ok=i===q.bonne;
+ document.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(k===q.bonne)b.classList.add("ok");else if(k===i)b.classList.add("ko")});
+ if(ok)score++;else wrong.push(q.sujet||"");
+ $("qx").innerHTML='<div class="warn"></div><div class="row"><button class="btn" id="qn"></button></div>';
+ $("qx").firstChild.textContent=(ok?"Bravo ! ":"Pas tout à fait. ")+(q.expl||"");
+ $("qn").textContent=qi+1<Q.length?"Suivant":"Voir le résultat";
+ $("qn").onclick=()=>{qi++;qi<Q.length?showQ():finish()};
+}
+function finish(){
+ S.xp+=score*10;
+ const d=day(Date.now());
+ if(S.last!==d){S.streak=S.last===day(Date.now()-864e5)?S.streak+1:1;S.last=d}
+ let extra="";
+ if(mode==="place"){
+  const r=score/Q.length;S.level=r<.35?"Débutant":r<.65?"Intermédiaire":r<.9?"Confirmé":"Avancé";
+  const cnt={};wrong.forEach(w=>{if(w)cnt[w]=(cnt[w]||0)+1});
+  S.weak=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3);
+  extra=`<p>Ton niveau : <b>${S.level}</b></p>`+(S.weak.length?`<p>À travailler en priorité : ${S.weak.join(", ")}</p>`:"<p>Aucun point faible repéré 👏</p>");
+ }else if(score/Q.length>=.8){S.weak=S.weak.filter(w=>w!==curTopic);extra="<p>Chapitre validé 🎉</p>"}
+ else if(curTopic&&!S.weak.includes(curTopic)){S.weak.push(curTopic);extra="<p>Ajouté à tes points à revoir.</p>"}
+ saveS();
+ $("qBox").innerHTML=`<div class="card"><h2>${score}/${Q.length}</h2><p>+${score*10} XP · 🔥 ${S.streak} jour(s)</p>${extra}<div class="row"><button class="btn" id="qHome">Continuer</button></div></div>`;
+ $("qHome").onclick=qHome;
+}
+qHome();
 
 // Commandes
 function renderCmds(f){
