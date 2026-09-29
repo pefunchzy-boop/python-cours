@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python, pas à pas</title>
+<style>
+:root{--bg:#f2f5f9;--card:#fff;--ink:#1b2a41;--mute:#5d6b80;--blue:#3776ab;--yel:#ffd43b;--line:#d9e0ea;--code:#14213a;--codeink:#e8eefc}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1724;--card:#182235;--ink:#e8eefc;--mute:#9aa8c0;--line:#2a3750;--code:#0b1220}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:14px 16px 0;position:sticky;top:0;background:var(--bg);z-index:5}
+h1{margin:0 0 10px;font-size:20px}
+nav{display:flex;gap:2px;overflow-x:auto}
+nav button{flex:1 0 auto;padding:10px 12px;border:0;border-bottom:3px solid transparent;background:none;color:var(--mute);font:600 14px inherit;cursor:pointer}
+select{font:14px inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px}
+.out{white-space:pre-wrap;word-wrap:break-word;margin-top:12px}
+.warn{border-left:4px solid var(--yel);padding:6px 10px;margin:6px 0;background:var(--card);border-radius:0 8px 8px 0}
+nav button.on{color:var(--ink);border-color:var(--yel)}
+main{padding:16px;max-width:760px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px}
+.chip{flex:none;padding:7px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;font:14px inherit;cursor:pointer}
+.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+pre,code{font-family:ui-monospace,Menlo,Consolas,monospace}
+pre{background:var(--code);color:var(--codeink);padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0;font-size:14px;white-space:pre-wrap}
+code.k{background:var(--code);color:var(--codeink);padding:2px 6px;border-radius:5px;font-size:14px}
+textarea,input{width:100%;font:15px inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px}
+textarea.c{font-family:ui-monospace,Menlo,monospace;font-size:14px;min-height:110px}
+.btn{padding:10px 16px;border:0;border-radius:8px;background:var(--blue);color:#fff;font:600 15px inherit;cursor:pointer}
+.btn.g{background:none;color:var(--blue);border:1px solid var(--blue)}
+.btn:disabled{opacity:.5}
+.msg{padding:10px 12px;border-radius:10px;margin:8px 0;white-space:pre-wrap;word-wrap:break-word}
+.msg.u{background:var(--blue);color:#fff;margin-left:24px}
+.msg.a{background:var(--card);border:1px solid var(--line);margin-right:24px}
+.row{display:flex;gap:8px;margin-top:8px}
+.cmd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.cmd:first-of-type{border-top:0}
+.cmd small{color:var(--mute);display:block}
+.cmd pre{margin:0 0 4px;padding:6px 10px;cursor:pointer}
+.hide{display:none}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--yel)}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:15px inherit;cursor:pointer}
+.opt.ok{background:#d5f5dd;border-color:#2e9e52;color:#0f3d1e}.opt.ko{background:#fddcdc;border-color:#d13b3b;color:#5a1010}
+.mute{color:var(--mute);font-size:14px}
+h2{font-size:18px;margin:4px 0 8px}
+h3{font-size:16px;margin:14px 0 4px}
+</style>
+</head>
+<body>
+<header>
+<h1>Python, pas à pas</h1>
+<nav><button id="t-cours" class="on">Cours</button><button id="t-cmd">Commandes</button><button id="t-dbg">Debug</button><button id="t-syn">Syntaxe</button><button id="t-quiz">Quiz</button></nav>
+</header>
+<main>
+
+<section id="cours">
+<div class="chips" id="chips"></div>
+<div class="card" id="lesson"></div>
+
+<div class="card">
+<h3 style="margin-top:0">Ton essai</h3>
+<textarea class="c" id="code" placeholder="Écris ton code ici (optionnel)" spellcheck="false"></textarea>
+<h3>Tuteur IA</h3>
+<div id="chat"><div class="msg a">Salut ! Essaie l'exercice, puis dis-moi où tu bloques. Je ne te donnerai pas la solution, mais je t'aiderai à la trouver.</div></div>
+<div class="row"><input id="q" placeholder="Ta question ou ce que tu as essayé…"><button class="btn" id="send">Envoyer</button></div>
+<div class="row"><button class="btn g" id="reset">Nouvelle conversation</button><button class="btn g" id="keybtn">Clé Gemini</button></div>
+<div class="row"><select id="model"><option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option><option value="gemini-3.8-flash">gemini-3.8-flash</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option></select></div>
+<p class="mute" id="keyinfo"></p>
+</div>
+</section>
+
+<section id="cmd" class="hide">
+<input id="search" placeholder="Chercher une commande (ex : boucle, liste, len)">
+<div id="cmds" style="margin-top:12px"></div>
+</section>
+
+<section id="quiz" class="hide"><div id="qBox"></div></section>
+
+<section id="dbg" class="hide">
+<div class="card">
+<h2>Comprendre une erreur</h2>
+<p class="mute">Colle le message d'erreur (la dernière ligne suffit, tout le « Traceback » c'est mieux).</p>
+<textarea class="c" id="dErr" placeholder="Ex : NameError: name 'x' is not defined" spellcheck="false"></textarea>
+<p class="mute">Ton code (optionnel, mais ça aide) :</p>
+<textarea class="c" id="dCode" spellcheck="false"></textarea>
+<div class="row"><button class="btn" id="dGo">Expliquer l'erreur</button></div>
+<div class="out" id="dOut"></div>
+</div>
+</section>
+
+<section id="syn" class="hide">
+<div class="card">
+<h2>Vérifier mon code</h2>
+<p class="mute">Colle ton code : je repère ce qui pourrait mal se passer, sans le corriger à ta place.</p>
+<textarea class="c" id="sCode" style="min-height:180px" spellcheck="false"></textarea>
+<div class="row"><button class="btn" id="sGo">Analyser</button></div>
+<div id="sLocal"></div>
+<div class="out" id="sOut"></div>
+</div>
+</section>
+
+</main>
+<script>
+const LESSONS=[
+{t:"Variables",e:"Une variable est un nom qui garde une valeur. Types de base : int (entier), float (décimal), str (texte), bool (vrai/faux). On utilise = pour ranger une valeur, et print() pour afficher.",c:"age = 15\nprenom = \"Paul\"\nprint(prenom, age)",x:"Crée deux variables (ton prénom et ton âge) puis affiche une phrase qui les utilise, du genre « Je m'appelle … et j'ai … ans »."},
+{t:"Conditions",e:"if / elif / else permet de choisir quoi faire selon un test. Les tests utilisent ==, !=, <, >, <=, >=. Attention à l'indentation : elle définit ce qui est dans le if.",c:"note = 12\nif note >= 10:\n    print(\"Reçu\")\nelse:\n    print(\"Raté\")",x:"Demande un nombre avec input(), puis dis s'il est pair ou impair."},
+{t:"Boucles",e:"for répète une action pour chaque élément (ou avec range(n)). while répète tant qu'une condition est vraie. Attention aux boucles infinies avec while.",c:"for i in range(3):\n    print(i)\n\nn = 0\nwhile n < 3:\n    n += 1",x:"Affiche la table de multiplication de 7 (de 7×1 à 7×10)."},
+{t:"Listes et dictionnaires",e:"Une liste est une suite ordonnée [a, b, c] (index à partir de 0). Un dictionnaire associe des clés à des valeurs {\"clé\": valeur}.",c:"fruits = [\"pomme\", \"kiwi\"]\nfruits.append(\"poire\")\neleve = {\"nom\": \"Paul\", \"note\": 14}\nprint(eleve[\"note\"])",x:"À partir d'une liste de notes, calcule la moyenne (sans utiliser de fonction toute faite autre que sum et len)."},
+{t:"Fonctions",e:"Une fonction regroupe du code réutilisable. def crée la fonction, return renvoie un résultat. Les paramètres sont les valeurs qu'on lui donne.",c:"def carre(x):\n    return x * x\n\nprint(carre(4))",x:"Écris une fonction est_majeur(age) qui renvoie True si age >= 18, sinon False."},
+{t:"Fichiers et erreurs",e:"open() avec « with » lit ou écrit un fichier en sécurité. try / except évite que le programme plante quand il y a une erreur (par exemple convertir « abc » en nombre).",c:"try:\n    n = int(input())\nexcept ValueError:\n    print(\"Pas un nombre\")\n\nwith open(\"a.txt\", \"w\") as f:\n    f.write(\"salut\")",x:"Demande un nombre à l'utilisateur et redemande tant qu'il n'écrit pas un vrai nombre."}
+];
+const CMDS=[
+["Affichage et saisie",[["print(valeur, ...)","Affiche à l'écran"],["input(\"message\")","Lit du texte tapé (renvoie un str)"],["f\"Salut {nom}\"","Texte avec variables dedans (f-string)"]]],
+["Types et conversions",[["int(x)","Convertit en entier"],["float(x)","Convertit en décimal"],["str(x)","Convertit en texte"],["bool(x)","Convertit en vrai/faux"],["type(x)","Donne le type de x"]]],
+["Opérateurs",[["+  -  *  /","Addition, soustraction, multiplication, division"],["//  et  %","Division entière et reste"],["**","Puissance : 2 ** 3 = 8"],["==  !=  <  >  <=  >=","Comparaisons"],["and  or  not","Logique"],["x in liste","Teste si x est dedans"]]],
+["Conditions",[["if test:\n    ...","Si le test est vrai"],["elif test:\n    ...","Sinon si"],["else:\n    ...","Sinon"]]],
+["Boucles",[["for i in range(n):\n    ...","Répète n fois (i de 0 à n-1)"],["for x in liste:\n    ...","Parcourt une liste"],["while test:\n    ...","Répète tant que vrai"],["break","Sort de la boucle"],["continue","Passe au tour suivant"]]],
+["Listes",[["l = [1, 2, 3]","Crée une liste"],["l[0]  /  l[-1]","Premier / dernier élément"],["l[1:3]","Tranche (éléments 1 et 2)"],["l.append(x)","Ajoute à la fin"],["l.insert(i, x)","Insère à la position i"],["l.remove(x)","Retire la première valeur x"],["l.pop(i)","Retire et renvoie l'élément i"],["l.sort()","Trie la liste"],["len(l)","Nombre d'éléments"],["sum(l)  min(l)  max(l)","Somme, plus petit, plus grand"],["sorted(l)","Copie triée"]]],
+["Dictionnaires",[["d = {\"a\": 1}","Crée un dictionnaire"],["d[\"a\"]","Lit la valeur de la clé"],["d[\"b\"] = 2","Ajoute ou modifie"],["d.get(\"a\", 0)","Lit sans erreur (0 par défaut)"],["d.keys()  d.values()  d.items()","Clés, valeurs, couples"],["del d[\"a\"]","Supprime une clé"]]],
+["Texte (str)",[["s.upper()  s.lower()","Majuscules / minuscules"],["s.split(\" \")","Coupe en liste"],["\" \".join(liste)","Recolle une liste en texte"],["s.replace(\"a\", \"b\")","Remplace"],["s.strip()","Enlève les espaces autour"],["s.startswith(\"x\")","Commence par ?"],["s.find(\"x\")","Position de x (-1 si absent)"],["len(s)","Nombre de caractères"]]],
+["Fonctions",[["def nom(a, b=0):\n    return a + b","Définit une fonction"],["lambda x: x * 2","Mini-fonction sans nom"],["import math","Importe un module"],["from random import randint","Importe un élément précis"]]],
+["Modules utiles",[["random.randint(1, 6)","Entier au hasard"],["random.choice(liste)","Élément au hasard"],["math.sqrt(x)","Racine carrée"],["math.pi","Valeur de pi"],["time.sleep(2)","Attend 2 secondes"],["round(x, 2)","Arrondit à 2 décimales"],["abs(x)","Valeur absolue"]]],
+["Fichiers",[["with open(\"f.txt\") as f:\n    txt = f.read()","Lit un fichier"],["with open(\"f.txt\", \"w\") as f:\n    f.write(\"x\")","Écrit (efface avant)"],["open(\"f.txt\", \"a\")","Ajoute à la fin"],["f.readlines()","Liste des lignes"]]],
+["Erreurs",[["try:\n    ...\nexcept ValueError:\n    ...","Attrape une erreur"],["raise ValueError(\"msg\")","Déclenche une erreur"],["finally:\n    ...","Toujours exécuté"]]],
+["Classes",[["class Chien:\n    def __init__(self, nom):\n        self.nom = nom","Crée une classe"],["c = Chien(\"Rex\")","Crée un objet"],["c.nom","Lit un attribut"]]],
+["Utilitaires",[["range(a, b, pas)","Suite de nombres"],["enumerate(liste)","Index + élément"],["zip(a, b)","Associe deux listes"],["# commentaire","Ligne ignorée"]]]
+];
+const $=id=>document.getElementById(id);
+const store={g:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let cur=+(store.g("lesson")||0),hist=[];
+
+// Onglets
+const TABS={cours:"t-cours",cmd:"t-cmd",dbg:"t-dbg",syn:"t-syn",quiz:"t-quiz"};
+function tab(n){for(const k in TABS){$(k).classList.toggle("hide",k!==n);$(TABS[k]).classList.toggle("on",k===n)}}
+for(const k in TABS)$(TABS[k]).onclick=()=>tab(k);
+$("model").value=store.g("model")||"gemini-3.5-flash-lite";
+$("model").onchange=()=>store.s("model",$("model").value);
+async function gem(sys,contents,json){
+ const key=store.g("gkey");if(!key)throw new Error("Ajoute d'abord ta clé Gemini (onglet Cours)");
+ const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+$("model").value+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents,generationConfig:json?{responseMimeType:"application/json"}:undefined})});
+ const j=await r.json();
+ if(!r.ok)throw new Error(j.error&&j.error.message||r.status);
+ return j.candidates[0].content.parts.map(p=>p.text||"").join("");
+}
+
+// Leçons
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function showLesson(){
+ const L=LESSONS[cur];store.s("lesson",cur);
+ $("chips").innerHTML=LESSONS.map((l,i)=>`<button class="chip ${i===cur?"on":""}" data-i="${i}">${i+1}. ${l.t}</button>`).join("");
+ $("lesson").innerHTML=`<h2>${L.t}</h2><p>${L.e}</p><pre>${esc(L.c)}</pre><h3>Exercice</h3><p>${L.x}</p>`;
+ document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{cur=+b.dataset.i;hist=[];$("chat").innerHTML='<div class="msg a">Nouveau chapitre : '+LESSONS[cur].t+'. Dis-moi où tu en es.</div>';showLesson()});
+}
+showLesson();
+
+// Tuteur Gemini
+const SYS="Tu es un tuteur de Python pour un élève débutant qui parle français. RÈGLES : ne donne JAMAIS la solution complète de l'exercice ni le code final corrigé. Explique les notions, pose des questions pour guider, donne des indices progressifs (le plus petit possible d'abord), signale où est l'erreur sans la corriger à sa place, et montre au plus de petits exemples différents de l'exercice. Si l'élève insiste pour avoir la réponse, refuse gentiment et propose un indice de plus. Sois bref (max 8 lignes), encourageant, simple.";
+function add(cls,txt){const d=document.createElement("div");d.className="msg "+cls;d.textContent=txt;$("chat").appendChild(d);d.scrollIntoView({block:"end"});return d}
+function keyInfo(){$("keyinfo").textContent=store.g("gkey")?"Clé Gemini enregistrée sur cet appareil.":"Ajoute ta clé Gemini pour activer le tuteur."}
+keyInfo();
+$("keybtn").onclick=()=>{const k=prompt("Colle ta clé API Gemini :",store.g("gkey")||"");if(k!==null){store.s("gkey",k.trim());keyInfo()}};
+$("reset").onclick=()=>{hist=[];$("chat").innerHTML='<div class="msg a">Conversation remise à zéro.</div>'};
+async function send(){
+ const q=$("q").value.trim();if(!q)return;
+ const key=store.g("gkey");if(!key){$("keybtn").click();return}
+ const L=LESSONS[cur],code=$("code").value.trim();
+ add("u",q);$("q").value="";
+ const ctx=`[Chapitre : ${L.t}. Exercice : ${L.x}]\n`+(code?`Code de l'élève :\n${code}\n\n`:"")+"Question : "+q;
+ hist.push({role:"user",parts:[{text:ctx}]});
+ const w=add("a","…");$("send").disabled=true;
+ try{
+  const t=await gem(SYS,hist);
+  hist.push({role:"model",parts:[{text:t}]});w.textContent=t;
+ }catch(e){hist.pop();w.textContent="Erreur : "+e.message+". Vérifie ta clé ou ta connexion."}
+ $("send").disabled=false;
+}
+$("send").onclick=send;$("q").onkeydown=e=>{if(e.key==="Enter")send()};
+
+// Debug
+const SYS_D="Tu aides un élève débutant en Python (français). Il te donne un message d'erreur et parfois son code. Réponds en français simple, en 4 parties courtes : 1) Ce que veut dire l'erreur (avec des mots simples). 2) Où ça coince (ligne, variable) si tu peux le voir. 3) Les causes les plus probables. 4) Une piste pour corriger, sans réécrire tout son code (au plus un mini-exemple générique). Pas de blabla.";
+$("dGo").onclick=async()=>{
+ const e=$("dErr").value.trim();if(!e)return;
+ const c=$("dCode").value.trim();
+ $("dOut").textContent="…";$("dGo").disabled=true;
+ try{$("dOut").textContent=await gem(SYS_D,[{role:"user",parts:[{text:"Erreur :\n"+e+(c?"\n\nMon code :\n"+c:"")}]}])}
+ catch(x){$("dOut").textContent="Erreur : "+x.message}
+ $("dGo").disabled=false;
+};
+
+// Syntaxe : vérifs locales + IA
+function localCheck(code){
+ const out=[],L=code.split("\n"),st=[],pairs={")":"(","]":"[","}":"{"};
+ const kw=/^\s*(if|elif|else|for|while|def|class|try|except|finally|with)\b/;
+ L.forEach((ln,i)=>{
+  const n=i+1,t=ln.replace(/#.*$/,"").trimEnd();
+  if(!t.trim())return;
+  if(kw.test(t)&&!t.endsWith(":")&&!t.endsWith("\\")&&!/[(\[{,]$/.test(t))out.push(`Ligne ${n} : il manque probablement « : » à la fin.`);
+  if(/^\s*(if|elif|while)\b[^=!<>]*[^=!<>]=[^=]/.test(t))out.push(`Ligne ${n} : « = » dans une condition ? Pour comparer, utilise « == ».`);
+  if(/^\t/.test(ln)&&L.some(x=>/^ +\S/.test(x)))out.push(`Ligne ${n} : tabulations et espaces mélangés pour l'indentation.`);
+  if(/\bprint\s+[^(\s=]/.test(t))out.push(`Ligne ${n} : print s'écrit avec des parenthèses : print(...).`);
+  for(const ch of t.replace(/(["'])(?:\\.|(?!\1).)*\1/g,"")){
+   if("([{".includes(ch))st.push([ch,n]);
+   else if(pairs[ch]){const o=st.pop();if(!o||o[0]!==pairs[ch])out.push(`Ligne ${n} : « ${ch} » sans son ouvrant.`)}
+  }
+ });
+ st.forEach(([c,n])=>out.push(`Ligne ${n} : « ${c} » jamais refermé.`));
+ return out;
+}
+const SYS_S="Tu relis du code Python d'un élève débutant (français). Repère ce qui pourrait mal se passer : erreurs de syntaxe, d'indentation, variables non définies ou mal orthographiées, types mélangés (str/int, input() renvoie du texte), index hors limites, division par zéro, boucles infinies, oublis de return, cas limites. Donne une liste courte : « Ligne N : problème possible + pourquoi ». Ne réécris PAS le code corrigé. S'il n'y a rien de grave, dis-le et propose 1 ou 2 points à tester.";
+$("sGo").onclick=async()=>{
+ const c=$("sCode").value;if(!c.trim())return;
+ const l=localCheck(c);
+ $("sLocal").innerHTML=l.map(x=>`<div class="warn">${esc(x)}</div>`).join("");
+ $("sOut").textContent="…";$("sGo").disabled=true;
+ try{$("sOut").textContent=await gem(SYS_S,[{role:"user",parts:[{text:c}]}])}
+ catch(x){$("sOut").textContent="Analyse IA impossible : "+x.message}
+ $("sGo").disabled=false;
+};
+
+// Quiz
+const SYS_Q="Tu crées des QCM Python pour un élève francophone débutant. Réponds UNIQUEMENT avec un tableau JSON, sans texte autour : [{\"sujet\":\"nom exact du thème\",\"q\":\"question\",\"code\":\"extrait de code ou chaîne vide\",\"choix\":[\"A\",\"B\",\"C\",\"D\"],\"bonne\":0,\"expl\":\"explication en 1 ou 2 phrases\"}]. 4 choix, une seule bonne réponse (\"bonne\" = son indice de 0 à 3), mauvaises réponses plausibles (erreurs classiques de débutant). Varie les types : prédire la sortie d'un code, trouver l'erreur, compléter, vocabulaire. Français simple.";
+let S=Object.assign({xp:0,streak:0,last:"",level:"",weak:[]},(()=>{try{return JSON.parse(store.g("qs"))||{}}catch(e){return{}}})());
+let Q=[],qi=0,score=0,wrong=[],mode="",curTopic="";
+const saveS=()=>store.s("qs",JSON.stringify(S));
+const day=t=>new Date(t).toISOString().slice(0,10);
+function qHome(){
+ const b=$("qBox");
+ b.innerHTML=`<div class="card"><h2>Ta progression</h2><p>⭐ ${S.xp} XP · 🔥 série : ${S.streak} jour(s)</p><p>Niveau : <b>${S.level||"pas encore évalué"}</b></p>${S.weak.length?`<p class="mute">À revoir : ${S.weak.join(", ")}</p>`:""}</div>
+ <div class="card"><h2>Test de niveau</h2><p class="mute">10 questions, de plus en plus dures, pour savoir où tu en es.</p><div class="row"><button class="btn" id="qPlace">${S.level?"Refaire le test":"Commencer"}</button></div></div>
+ <div class="card"><h2>Mini-tests</h2><p class="mute">5 questions sur un chapitre.</p><div id="qTop"></div></div>`;
+ $("qPlace").onclick=()=>startQuiz("place");
+ const names=S.weak.concat(LESSONS.map(l=>l.t).filter(t=>!S.weak.includes(t)));
+ names.forEach(t=>{const c=document.createElement("button");c.className="opt";c.textContent=(S.weak.includes(t)?"⚠️ ":"")+t;c.onclick=()=>startQuiz("mini",t);$("qTop").appendChild(c)});
+}
+async function startQuiz(m,topic){
+ mode=m;curTopic=topic||"";$("qBox").innerHTML='<div class="card">Je prépare tes questions…</div>';
+ const n=m==="place"?10:5,th=LESSONS.map(l=>l.t).join(", ");
+ const p=m==="place"?`Test de niveau de ${n} questions couvrant ces thèmes (champ sujet = un de ces noms exacts) : ${th}. Difficulté croissante : les 3 premières très faciles, les 3 dernières difficiles.`:`Mini-test de ${n} questions sur le thème « ${topic} » (champ sujet = « ${topic} »). Niveau de l'élève : ${S.level||"débutant"}.`;
+ try{
+  const t=await gem(SYS_Q,[{role:"user",parts:[{text:p}]}],true);
+  Q=JSON.parse(t.replace(/```json|```/g,"").trim()).filter(q=>q&&q.q&&Array.isArray(q.choix)&&q.choix.length>1&&Number.isInteger(q.bonne)&&q.bonne<q.choix.length).slice(0,n);
+  if(!Q.length)throw new Error("aucune question valide, réessaie");
+  Q.forEach(q=>{const c=q.choix.map((x,i)=>[x,i===q.bonne]).sort(()=>Math.random()-.5);q.choix=c.map(x=>x[0]);q.bonne=c.findIndex(x=>x[1])});
+  qi=0;score=0;wrong=[];showQ();
+ }catch(e){$("qBox").innerHTML='<div class="card"><p id="qErr"></p><div class="row"><button class="btn" id="qBack">Retour</button></div></div>';$("qErr").textContent="Impossible de créer le test : "+e.message;$("qBack").onclick=qHome}
+}
+function showQ(){
+ const q=Q[qi];
+ $("qBox").innerHTML=`<div class="card"><div class="bar"><i style="width:${qi/Q.length*100}%"></i></div><p class="mute">Question ${qi+1}/${Q.length}</p><p id="qq"></p><pre id="qc" class="hide"></pre><div id="qch"></div><div id="qx"></div></div>`;
+ $("qq").textContent=q.q;
+ if(q.code){$("qc").textContent=q.code;$("qc").classList.remove("hide")}
+ q.choix.forEach((c,i)=>{const bt=document.createElement("button");bt.className="opt";bt.textContent=c;bt.onclick=()=>answer(i);$("qch").appendChild(bt)});
+}
+function answer(i){
+ const q=Q[qi],ok=i===q.bonne;
+ document.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(k===q.bonne)b.classList.add("ok");else if(k===i)b.classList.add("ko")});
+ if(ok)score++;else wrong.push(q.sujet||"");
+ $("qx").innerHTML='<div class="warn"></div><div class="row"><button class="btn" id="qn"></button></div>';
+ $("qx").firstChild.textContent=(ok?"Bravo ! ":"Pas tout à fait. ")+(q.expl||"");
+ $("qn").textContent=qi+1<Q.length?"Suivant":"Voir le résultat";
+ $("qn").onclick=()=>{qi++;qi<Q.length?showQ():finish()};
+}
+function finish(){
+ S.xp+=score*10;
+ const d=day(Date.now());
+ if(S.last!==d){S.streak=S.last===day(Date.now()-864e5)?S.streak+1:1;S.last=d}
+ let extra="";
+ if(mode==="place"){
+  const r=score/Q.length;S.level=r<.35?"Débutant":r<.65?"Intermédiaire":r<.9?"Confirmé":"Avancé";
+  const cnt={};wrong.forEach(w=>{if(w)cnt[w]=(cnt[w]||0)+1});
+  S.weak=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3);
+  extra=`<p>Ton niveau : <b>${S.level}</b></p>`+(S.weak.length?`<p>À travailler en priorité : ${S.weak.join(", ")}</p>`:"<p>Aucun point faible repéré 👏</p>");
+ }else if(score/Q.length>=.8){S.weak=S.weak.filter(w=>w!==curTopic);extra="<p>Chapitre validé 🎉</p>"}
+ else if(curTopic&&!S.weak.includes(curTopic)){S.weak.push(curTopic);extra="<p>Ajouté à tes points à revoir.</p>"}
+ saveS();
+ $("qBox").innerHTML=`<div class="card"><h2>${score}/${Q.length}</h2><p>+${score*10} XP · 🔥 ${S.streak} jour(s)</p>${extra}<div class="row"><button class="btn" id="qHome">Continuer</button></div></div>`;
+ $("qHome").onclick=qHome;
+}
+qHome();
+
+// Commandes
+function renderCmds(f){
+ f=(f||"").toLowerCase();let h="";
+ CMDS.forEach(([cat,list])=>{
+  const m=list.filter(([s,d])=>!f||(s+d+cat).toLowerCase().includes(f));
+  if(!m.length)return;
+  h+=`<div class="card"><h2>${cat}</h2>`+m.map(([s,d])=>`<div class="cmd"><div><pre data-c="${encodeURIComponent(s)}">${esc(s)}</pre><small>${d}</small></div></div>`).join("")+"</div>";
+ });
+ $("cmds").innerHTML=h||'<p class="mute">Aucune commande trouvée.</p>';
+ document.querySelectorAll("#cmds pre").forEach(p=>p.onclick=()=>{try{navigator.clipboard.writeText(decodeURIComponent(p.dataset.c));p.style.outline="2px solid var(--yel)";setTimeout(()=>p.style.outline="",600)}catch(e){}});
+}
+renderCmds();$("search").oninput=e=>renderCmds(e.target.value);
+</script>
+</body>
+</html>
