@@ -24,7 +24,8 @@ main{padding:16px;max-width:760px;margin:auto}
 .chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
 pre,code{font-family:ui-monospace,Menlo,Consolas,monospace}
 pre{background:var(--code);color:var(--codeink);padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0;font-size:14px;white-space:pre-wrap}
-code.k{background:var(--code);color:var(--codeink);padding:2px 6px;border-radius:5px;font-size:14px}
+code.k{background:var(--code);color:var(--codeink);padding:2px 6px;border
+-radius:5px;font-size:14px}
 textarea,input{width:100%;font:15px inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px}
 textarea.c{font-family:ui-monospace,Menlo,monospace;font-size:14px;min-height:110px}
 .btn{padding:10px 16px;border:0;border-radius:8px;background:var(--blue);color:#fff;font:600 15px inherit;cursor:pointer}
@@ -59,7 +60,8 @@ h3{font-size:16px;margin:14px 0 4px}
 <div class="card" id="lesson"></div>
 
 <div class="card">
-<h3 style="margin-top:0">Ton essai</h3>
+<h3 style="ma
+rgin-top:0">Ton essai</h3>
 <textarea class="c" id="code" placeholder="Écris ton code ici (optionnel)" spellcheck="false"></textarea>
 <h3>Tuteur IA</h3>
 <div id="chat"><div class="msg a">Salut ! Essaie l'exercice, puis dis-moi où tu bloques. Je ne te donnerai pas la solution, mais je t'aiderai à la trouver.</div></div>
@@ -94,7 +96,8 @@ h3{font-size:16px;margin:14px 0 4px}
 <h2>Vérifier mon code</h2>
 <p class="mute">Colle ton code : je repère ce qui pourrait mal se passer, sans le corriger à ta place.</p>
 <textarea class="c" id="sCode" style="min-height:180px" spellcheck="false"></textarea>
-<div class="row"><button class="btn" id="sGo">Analyser</button></div>
+<div class="row"><button class="btn" id=
+"sGo">Analyser</button></div>
 <div id="sLocal"></div>
 <div class="out" id="sOut"></div>
 </div>
@@ -108,7 +111,8 @@ const LESSONS=[
 {t:"Boucles",e:"for répète une action pour chaque élément (ou avec range(n)). while répète tant qu'une condition est vraie. Attention aux boucles infinies avec while.",c:"for i in range(3):\n    print(i)\n\nn = 0\nwhile n < 3:\n    n += 1",x:"Affiche la table de multiplication de 7 (de 7×1 à 7×10)."},
 {t:"Listes et dictionnaires",e:"Une liste est une suite ordonnée [a, b, c] (index à partir de 0). Un dictionnaire associe des clés à des valeurs {\"clé\": valeur}.",c:"fruits = [\"pomme\", \"kiwi\"]\nfruits.append(\"poire\")\neleve = {\"nom\": \"Paul\", \"note\": 14}\nprint(eleve[\"note\"])",x:"À partir d'une liste de notes, calcule la moyenne (sans utiliser de fonction toute faite autre que sum et len)."},
 {t:"Fonctions",e:"Une fonction regroupe du code réutilisable. def crée la fonction, return renvoie un résultat. Les paramètres sont les valeurs qu'on lui donne.",c:"def carre(x):\n    return x * x\n\nprint(carre(4))",x:"Écris une fonction est_majeur(age) qui renvoie True si age >= 18, sinon False."},
-{t:"Fichiers et erreurs",e:"open() avec « with » lit ou écrit un fichier en sécurité. try / except évite que le programme plante quand il y a une erreur (par exemple convertir « abc » en nombre).",c:"try:\n    n = int(input())\nexcept ValueError:\n    print(\"Pas un nombre\")\n\nwith open(\"a.txt\", \"w\") as f:\n    f.write(\"salut\")",x:"Demande un nombre à l'utilisateur et redemande tant qu'il n'écrit pas un vrai nombre."}
+{t:"Fichiers et erreurs",e:"open() avec « with » lit ou écrit un fichier en sécurité. try / except évite que le pr
+ogramme plante quand il y a une erreur (par exemple convertir « abc » en nombre).",c:"try:\n    n = int(input())\nexcept ValueError:\n    print(\"Pas un nombre\")\n\nwith open(\"a.txt\", \"w\") as f:\n    f.write(\"salut\")",x:"Demande un nombre à l'utilisateur et redemande tant qu'il n'écrit pas un vrai nombre."}
 ];
 const CMDS=[
 ["Affichage et saisie",[["print(valeur, ...)","Affiche à l'écran"],["input(\"message\")","Lit du texte tapé (renvoie un str)"],["f\"Salut {nom}\"","Texte avec variables dedans (f-string)"]]],
@@ -117,7 +121,8 @@ const CMDS=[
 ["Conditions",[["if test:\n    ...","Si le test est vrai"],["elif test:\n    ...","Sinon si"],["else:\n    ...","Sinon"]]],
 ["Boucles",[["for i in range(n):\n    ...","Répète n fois (i de 0 à n-1)"],["for x in liste:\n    ...","Parcourt une liste"],["while test:\n    ...","Répète tant que vrai"],["break","Sort de la boucle"],["continue","Passe au tour suivant"]]],
 ["Listes",[["l = [1, 2, 3]","Crée une liste"],["l[0]  /  l[-1]","Premier / dernier élément"],["l[1:3]","Tranche (éléments 1 et 2)"],["l.append(x)","Ajoute à la fin"],["l.insert(i, x)","Insère à la position i"],["l.remove(x)","Retire la première valeur x"],["l.pop(i)","Retire et renvoie l'élément i"],["l.sort()","Trie la liste"],["len(l)","Nombre d'éléments"],["sum(l)  min(l)  max(l)","Somme, plus petit, plus grand"],["sorted(l)","Copie triée"]]],
-["Dictionnaires",[["d = {\"a\": 1}","Crée un dictionnaire"],["d[\"a\"]","Lit la valeur de la clé"],["d[\"b\"] = 2","Ajoute ou modifie"],["d.get(\"a\", 0)","Lit sans erreur (0 par défaut)"],["d.keys()  d.values()  d.items()","Clés, valeurs, couples"],["del d[\"a\"]","Supprime une clé"]]],
+["Dictionnaires",[["d = {\"a\": 1}","Crée un dictionnaire"],["d[\"a\"]","Lit la valeur de la clé"],["d[\"b\"] = 2","Ajoute ou modifie"],["d.get(\"a\", 0)","Lit sans erreur (0 par défaut)"],["d.ke
+ys()  d.values()  d.items()","Clés, valeurs, couples"],["del d[\"a\"]","Supprime une clé"]]],
 ["Texte (str)",[["s.upper()  s.lower()","Majuscules / minuscules"],["s.split(\" \")","Coupe en liste"],["\" \".join(liste)","Recolle une liste en texte"],["s.replace(\"a\", \"b\")","Remplace"],["s.strip()","Enlève les espaces autour"],["s.startswith(\"x\")","Commence par ?"],["s.find(\"x\")","Position de x (-1 si absent)"],["len(s)","Nombre de caractères"]]],
 ["Fonctions",[["def nom(a, b=0):\n    return a + b","Définit une fonction"],["lambda x: x * 2","Mini-fonction sans nom"],["import math","Importe un module"],["from random import randint","Importe un élément précis"]]],
 ["Modules utiles",[["random.randint(1, 6)","Entier au hasard"],["random.choice(liste)","Élément au hasard"],["math.sqrt(x)","Racine carrée"],["math.pi","Valeur de pi"],["time.sleep(2)","Attend 2 secondes"],["round(x, 2)","Arrondit à 2 décimales"],["abs(x)","Valeur absolue"]]],
@@ -131,7 +136,8 @@ const store={g:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s:(
 let cur=+(store.g("lesson")||0),hist=[];
 
 // Onglets
-const TABS={cours:"t-cours",cmd:"t-cmd",dbg:"t-dbg",syn:"t-syn",quiz:"t-quiz"};
+const TABS={cours:"t-cours",cmd:"t-cmd",dbg:"t-dbg",syn:"
+t-syn",quiz:"t-quiz"};
 function tab(n){for(const k in TABS){$(k).classList.toggle("hide",k!==n);$(TABS[k]).classList.toggle("on",k===n)}}
 for(const k in TABS)$(TABS[k]).onclick=()=>tab(k);
 $("model").value=store.g("model")||"gemini-3.5-flash-lite";
@@ -155,7 +161,8 @@ function showLesson(){
 showLesson();
 
 // Tuteur Gemini
-const SYS="Tu es un tuteur de Python pour un élève débutant qui parle français. RÈGLES : ne donne JAMAIS la solution complète de l'exercice ni le code final corrigé. Explique les notions, pose des questions pour guider, donne des indices progressifs (le plus petit possible d'abord), signale où est l'erreur sans la corriger à sa place, et montre au plus de petits exemples différents de l'exercice. Si l'élève insiste pour avoir la réponse, refuse gentiment et propose un indice de plus. Sois bref (max 8 lignes), encourageant, simple.";
+const SYS="Tu es un tuteur de Python pour un élève débutant qui parle français. RÈGLES : ne donne JAMAIS la solution complète de l'exercice ni le code final corrigé. Explique les notions, pose des questions pour guider, donne des indices progressifs (le plus petit possible d'abord), signale où est l'erreur sans la corriger à sa place, et montre au plus de petits exemples différents de l'exercice. Si l'
+élève insiste pour avoir la réponse, refuse gentiment et propose un indice de plus. Sois bref (max 8 lignes), encourageant, simple.";
 function add(cls,txt){const d=document.createElement("div");d.className="msg "+cls;d.textContent=txt;$("chat").appendChild(d);d.scrollIntoView({block:"end"});return d}
 function keyInfo(){$("keyinfo").textContent=store.g("gkey")?"Clé Gemini enregistrée sur cet appareil.":"Ajoute ta clé Gemini pour activer le tuteur."}
 keyInfo();
@@ -182,11 +189,44 @@ const SYS_D="Tu aides un élève débutant en Python (français). Il te donne un
 $("dGo").onclick=async()=>{
  const e=$("dErr").value.trim();if(!e)return;
  const c=$("dCode").value.trim();
- $("dOut").textContent="…";$("dGo").disabled=true;
+ $("dOut").textContent="…";$("dGo").dis
+abled=true;
  try{$("dOut").textContent=await gem(SYS_D,[{role:"user",parts:[{text:"Erreur :\n"+e+(c?"\n\nMon code :\n"+c:"")}]}])}
  catch(x){$("dOut").textContent="Erreur : "+x.message}
  $("dGo").disabled=false;
 };
+
+// Éditeur intelligent : paires automatiques, indentation, Tab
+const PAIRS={"(":")","[":"]","{":"}","\"":"\"","'":"'"};
+const CLOSE={")":1,"]":1,"}":1,"\"":1,"'":1};
+function smartEdit(ta){
+ ta.addEventListener("keydown",e=>{
+  const s=ta.selectionStart,en=ta.selectionEnd,v=ta.value;
+  // Tab : indente au lieu de changer de focus (Shift+Tab désindente)
+  if(e.key==="Tab"){e.preventDefault();
+   if(!e.shiftKey){ta.setRangeText("    ",s,en,"end")}
+   else if(s===en){const ls=v.lastIndexOf("\n",s-1)+1,ind=v.slice(ls).match(/^[ \t]*/)[0],rm=Math.min(4,ind.length);if(rm)ta.setRangeText("",ls,ls+rm,"preserve")}
+   else{const a=v.lastIndexOf("\n",s-1)+1,b=v.indexOf("\n",en),l0=v.slice(a,(b<0?v.length:b)).split("\n");
+    l0.forEach((ln,i)=>{const st=a+ln.match(/^[ \t]*/)[0].length;ta.setRangeText("",st,st+Math.min(4,ln.match(/^[ \t]*/)[0].length),"preserve")});}
+   return}
+  // Entrée : garde l'indentation, +4 espaces après un « : »
+  if(e.key==="Enter"){e.preventDefault();
+   const ls=v.lastIndexOf("\n",s-1)+1,line=v.slice(ls,s);
+   let ind=line.match(/^\s*/)[0];
+   if(/:(\s*(#.*)?)?$/.test(line.trimEnd()))ind+="    ";
+   ta.setRangeText("\n"+ind,s,en,"end");return}
+  // Fermer : si le caractère est déjà devant le curseur, on le saute
+  if(CLOSE[e.key]&&s===en&&v[s]===e.key){e.preventDefault();ta.setSelectionRange(s+1,s+1);return}
+  // Ouvrir : insère la paire, autour de la sélection s'il y en a une
+  if(PAIRS[e.key]){e.preventDefault();
+   const sel=v.slice(s,en);
+   ta.setRangeText(e.key+sel+PAIRS[e.key],s,en,"preserve");
+   const c=s+1;ta.setSelectionRange(sel?c:c-0+(e.key===PAIRS[e.key]?1:0)+0,0);
+   if(sel)ta.setSelectionRange(c,c+sel.length);else ta.setSelectionRange(s+1,s+1);
+   return}
+ });
+}
+smartEdit($("sCode"));smartEdit($("code"));smartEdit($("dCode"));
 
 // Syntaxe : vérifs locales + IA
 function localCheck(code){
@@ -211,7 +251,8 @@ const SYS_S="Tu relis du code Python d'un élève débutant (français). Repère
 $("sGo").onclick=async()=>{
  const c=$("sCode").value;if(!c.trim())return;
  const l=localCheck(c);
- $("sLocal").innerHTML=l.map(x=>`<div class="warn">${esc(x)}</div>`).join("");
+ $("sLocal").innerHTML=l.map(x=>`<div class="warn"
+>${esc(x)}</div>`).join("");
  $("sOut").textContent="…";$("sGo").disabled=true;
  try{$("sOut").textContent=await gem(SYS_S,[{role:"user",parts:[{text:c}]}])}
  catch(x){$("sOut").textContent="Analyse IA impossible : "+x.message}
@@ -231,7 +272,8 @@ function qHome(){
  <div class="card"><h2>Mini-tests</h2><p class="mute">5 questions sur un chapitre.</p><div id="qTop"></div></div>`;
  $("qPlace").onclick=()=>startQuiz("place");
  const names=S.weak.concat(LESSONS.map(l=>l.t).filter(t=>!S.weak.includes(t)));
- names.forEach(t=>{const c=document.createElement("button");c.className="opt";c.textContent=(S.weak.includes(t)?"⚠️ ":"")+t;c.onclick=()=>startQuiz("mini",t);$("qTop").appendChild(c)});
+ names.forEach(t=>{const c=document.createElement("button");c.className="opt";c.textContent=(S.weak.includes(t)?"⚠️ ":"")+t;c.onc
+lick=()=>startQuiz("mini",t);$("qTop").appendChild(c)});
 }
 async function startQuiz(m,topic){
  mode=m;curTopic=topic||"";$("qBox").innerHTML='<div class="card">Je prépare tes questions…</div>';
@@ -254,7 +296,8 @@ function showQ(){
 }
 function answer(i){
  const q=Q[qi],ok=i===q.bonne;
- document.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(k===q.bonne)b.classList.add("ok");else if(k===i)b.classList.add("ko")});
+ document.querySelectorAll(".opt").forEach((b,k)=>{b.disabled=true;if(k===q.bonne)b.classList
+.add("ok");else if(k===i)b.classList.add("ko")});
  if(ok)score++;else wrong.push(q.sujet||"");
  $("qx").innerHTML='<div class="warn"></div><div class="row"><button class="btn" id="qn"></button></div>';
  $("qx").firstChild.textContent=(ok?"Bravo ! ":"Pas tout à fait. ")+(q.expl||"");
@@ -288,7 +331,8 @@ function renderCmds(f){
   h+=`<div class="card"><h2>${cat}</h2>`+m.map(([s,d])=>`<div class="cmd"><div><pre data-c="${encodeURIComponent(s)}">${esc(s)}</pre><small>${d}</small></div></div>`).join("")+"</div>";
  });
  $("cmds").innerHTML=h||'<p class="mute">Aucune commande trouvée.</p>';
- document.querySelectorAll("#cmds pre").forEach(p=>p.onclick=()=>{try{navigator.clipboard.writeText(decodeURIComponent(p.dataset.c));p.style.outline="2px solid var(--yel)";setTimeout(()=>p.style.outline="",600)}catch(e){}});
+ document.querySelectorAll("#cmds pre").forEach(p=>p.onclick=()=>{try{navigator.clipboard.writeText
+(decodeURIComponent(p.dataset.c));p.style.outline="2px solid var(--yel)";setTimeout(()=>p.style.outline="",600)}catch(e){}});
 }
 renderCmds();$("search").oninput=e=>renderCmds(e.target.value);
 </script>
