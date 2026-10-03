@@ -1,0 +1,123 @@
+name: Add PWA home-screen support
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  pwa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch index.html + generate manifest and icons
+        run: |
+          cat > /tmp/pwa_patch.py <<'PYEOF'
+          import struct, zlib, sys, json, pathlib
+
+          base = pathlib.Path('.')
+          idx = base / 'index.html'
+          content = idx.read_text(encoding='utf-8')
+
+          if 'apple-mobile-web-app-capable' in content:
+              print('already patched, skipping html edit')
+          else:
+              anchor = '<title>Python, pas à pas</title>'
+              if content.count(anchor) != 1:
+                  sys.exit('ERREUR: ancre <title> introuvable ou multiple, abandon')
+              block = anchor + """
+          <link rel="manifest" href="manifest.webmanifest">
+          <meta name="theme-color" content="#3776ab">
+          <link rel="apple-touch-icon" href="icon-180.png">
+          <link rel="icon" href="icon-192.png" type="image/png">
+          <meta name="apple-mobile-web-app-capable" content="yes">
+          <meta name="mobile-web-app-capable" content="yes">
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+          <meta name="apple-mobile-web-app-title" content="Python">"""
+              content = content.replace(anchor, block, 1)
+              idx.write_text(content, encoding='utf-8')
+              print('index.html patched')
+
+          manifest = {
+              "name": "Python, pas à pas",
+              "short_name": "Python",
+              "description": "Apprendre Python pas à pas, avec cours, tests et debug",
+              "start_url": ".",
+              "scope": ".",
+              "display": "standalone",
+              "background_color": "#f2f5f9",
+              "theme_color": "#3776ab",
+              "icons": [
+                  {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+                  {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+              ]
+          }
+          (base / 'manifest.webmanifest').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
+
+          BG = (55, 118, 171, 255)
+          WHITE = (255, 255, 255, 255)
+          YELLOW = (255, 212, 59, 255)
+
+          def seg_dist(px, py, ax, ay, bx, by):
+              vx, vy = bx - ax, by - ay
+              wx, wy = px - ax, py - ay
+              c1 = vx * wx + vy * wy
+              c2 = vx * vx + vy * vy
+              if c2 == 0:
+                  return (wx * wx + wy * wy) ** 0.5
+              t = max(0.0, min(1.0, c1 / c2))
+              dx, dy = ax + t * vx - px, ay + t * vy - py
+              return (dx * dx + dy * dy) ** 0.5
+
+          def make_icon(size, path):
+              s = float(size)
+              cx, cy, r = 0.36 * s, 0.50 * s, 0.17 * s
+              thick = 0.055 * s
+              ax1, ay1 = cx - r, cy - r
+              bx1, by1 = cx + r, cy
+              cx1, cy1 = cx - r, cy + r
+              barx = cx + r + 0.14 * s
+              rows = []
+              for y in range(size):
+                  row = bytearray()
+                  for x in range(size):
+                      px, py = x + 0.5, y + 0.5
+                      in_chevron = (seg_dist(px, py, ax1, ay1, bx1, by1) < thick or
+                                    seg_dist(px, py, bx1, by1, cx1, cy1) < thick)
+                      in_bar = (barx - 0.035 * s <= px <= barx + 0.035 * s and
+                                0.36 * s <= py <= 0.64 * s)
+                      c = BG
+                      if in_chevron:
+                          c = WHITE
+                      elif in_bar:
+                          c = YELLOW
+                      row += bytes(c)
+                  rows.append(bytes(row))
+              raw = b''.join(b'\x00' + r for r in rows)
+              def chunk(tag, data):
+                  out = struct.pack('>I', len(data)) + tag + data
+                  return out + struct.pack('>I', zlib.crc32(tag + data) & 0xffffffff)
+              png = b'\x89PNG\r\n\x1a\n'
+              png += chunk(b'IHDR', struct.pack('>IIBBBBB', size, size, 8, 6, 0, 0, 0))
+              png += chunk(b'IDAT', zlib.compress(raw, 9))
+              png += chunk(b'IEND', b'')
+              pathlib.Path(path).write_bytes(png)
+
+          for sz in (180, 192, 512):
+              make_icon(sz, f'icon-{sz}.png')
+          print('icons + manifest OK')
+          PYEOF
+          python3 /tmp/pwa_patch.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "rien a commiter"; else
+            git commit -m "Ajoute icones, manifest et metas iOS (installable plein ecran depuis Safari)"
+            git push
+          fi
